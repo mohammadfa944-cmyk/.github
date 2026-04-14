@@ -1,1 +1,73 @@
 
+import os
+import subprocess
+import sys
+
+# تثبيت المكتبات اللازمة غصب عن الموقع
+def install_libs():
+    libs = ["gtts", "gradio", "opencv-python", "numpy"]
+    for lib in libs:
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
+        except:
+            pass
+
+install_libs()
+
+import gradio as gr
+from gtts import gTTS
+import cv2
+import numpy as np
+
+# محرك الصور
+def engine_image(text):
+    path = "frameai_img.png"
+    img = np.zeros((720, 1280, 3), np.uint8)
+    cv2.putText(img, "frameai photo", (400, 360), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
+    cv2.imwrite(path, img)
+    return path
+
+# محرك الصوت
+def engine_audio(text):
+    path = "frameai_audio.mp3"
+    tts = gTTS(text=text, lang='ar')
+    tts.save(path)
+    return path
+
+# محرك الفيديو
+def engine_video(p_vid, t_vid):
+    path = "frameai_video.mp4"
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(path, fourcc, 24, (1280, 720))
+    for i in range(60): # فيديو لمدة ثانيتين للتجربة
+        img = np.zeros((720, 1280, 3), np.uint8)
+        cv2.putText(img, "frameai video", (400, 360), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
+        out.write(img)
+    out.release()
+    return path
+
+# تصميم الواجهة
+with gr.Blocks(theme=gr.themes.Soft()) as demo:
+    gr.Markdown("# منصة محمد فايز - frameai v1")
+    
+    with gr.Tabs():
+        with gr.TabItem("تصميم صور"):
+            txt_i = gr.Textbox(label="وصف الصورة")
+            out_i = gr.Image()
+            btn_i = gr.Button("توليد الصورة")
+            btn_i.click(engine_image, inputs=txt_i, outputs=out_i)
+            
+        with gr.TabItem("تحويل نص لصوت"):
+            txt_a = gr.Textbox(label="اكتب النص هنا")
+            out_a = gr.Audio()
+            btn_a = gr.Button("توليد الصوت")
+            btn_a.click(engine_audio, inputs=txt_a, outputs=out_a)
+            
+        with gr.TabItem("تصميم فيديو"):
+            txt_vp = gr.Textbox(label="وصف الفيديو")
+            txt_vt = gr.Textbox(label="نص الفيديو")
+            out_v = gr.Video()
+            btn_v = gr.Button("توليد الفيديو")
+            btn_v.click(engine_video, inputs=[txt_vp, txt_vt], outputs=out_v)
+
+demo.launch()
